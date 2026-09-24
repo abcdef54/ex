@@ -86,7 +86,7 @@ def get_peft_config():
         lora_alpha=64,
         r=32,
         lora_dropout=0.05,
-        lora_bias="none",
+        bias="none",
         target_modules=QLORA_SETTINGS["target_modules"]
     )
     return peft_config
@@ -120,12 +120,7 @@ def get_training_args():
     return training_args
 
 def format_prompt(sample):
-    output_texts = []
-    for q, a in zip(sample['question'], sample['answer']):
-        output_texts.append(
-            f"Question: {q}\n\nAnswer: {a}"
-        )
-    return output_texts
+    return f"Question: {sample['question']}\n\nAnswer: {sample['answer']}"
 
 def get_trainer(train_dataset=None, eval_dataset=None):
     model = get_model()
