@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+venv/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Large models and weights (do NOT commit to git)
+models/
+results/
+wandb/
+
+# Datasets (files > 100MB will be rejected by GitHub)
+data/
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+*.log
