@@ -4,7 +4,7 @@ from datasets import load_dataset, Dataset
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, TrainingArguments
 from peft import prepare_model_for_kbit_training, LoraConfig
 from trl import SFTTrainer, SFTConfig
-from src.configs import MODEL_PATH
+MODEL_PATH = "./models/generals/"
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epochs", type=int, default=1, required=False, help="Number of epochs to train")
