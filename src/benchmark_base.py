@@ -6,7 +6,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from tqdm import tqdm
 from collections import Counter
 
-LOCAL_MODEL = "./models/base/"
+LOCAL_MODEL = "./models/generals/"
+SFT_MODEL = "./models/SFT/"
+RL_MODEL = "./models/RL/"
+SFT_RL_MODEL = "./models/SFT_RL/"
 
 FEW_SHOT_COT_PROMPT = """Question: There are 15 trees in the grove. Grove workers will plant trees in the grove today. After they are done, there will be 21 trees. How many trees did the grove workers plant today?
 Answer: There are 15 trees originally. Then there were 21 trees after some more were planted. So there must have been 21 - 15 = 6. The answer is 6.
@@ -31,10 +34,12 @@ Answer: The answer is 8.
 """
 
 parser = argparse.ArgumentParser(description="Benchmark the base model")
+parser.add_argument("--model-path", type=str, required=True, choices=[LOCAL_MODEL, SFT_MODEL, RL_MODEL, SFT_RL_MODEL], help="model path")
 parser.add_argument("--num-samples", type=int, required=False, default=-1, help="number of samples to test on")
 parser.add_argument("--batch-size", type=int, required=False, default=8, help="batch size for evaluation")
 parser.add_argument("--mode", type=str, required=True, choices=["cot-few", "cot-zero", "direct"], help="which prompting mode to use")
 parser.add_argument("--self-consistency", type=int, required=False, default=1, help="self-consistency sampling")
+parser.add_argument("--max-new-tokens", type=int, required=False, default=128, help="max new tokens to generate")
 
 def get_model_and_tokenizer(path: str) -> tuple[AutoModelForCausalLM, AutoTokenizer]:
     tokenizer = AutoTokenizer.from_pretrained(
@@ -100,6 +105,7 @@ def bench(
     self_consistency: int = 1,
     num_samples: int = None,
     batch_size: int = 8,
+    max_new_tokens: int = 128,
 ) -> tuple[float, int, int]:
     if num_samples is not None:
         dataset = dataset.select(range(num_samples))
@@ -127,7 +133,7 @@ def bench(
         with torch.inference_mode():
             output_ids = model.generate(
                 **inputs,
-                max_new_tokens=128,
+                max_new_tokens=max_new_tokens,
                 do_sample=True,
                 temperature=0.7,
                 top_p=0.9,
@@ -166,10 +172,11 @@ def bench(
 
 if __name__ == "__main__":
     train, test = get_gsm8k_dataset_splits()
-    model, tokenizer = get_model_and_tokenizer(LOCAL_MODEL)
-
+    
     args = parser.parse_args()
 
+    model, tokenizer = get_model_and_tokenizer(args.model_path)
+    
     num_samples = args.num_samples
     if num_samples <= 0:
         num_samples = None
@@ -185,6 +192,8 @@ if __name__ == "__main__":
 
     self_consistency = args.self_consistency
 
+    max_new_tokens = args.max_new_tokens
+
     accuracy, correct, total = bench(
         model, 
         tokenizer, 
@@ -193,6 +202,7 @@ if __name__ == "__main__":
         num_samples=num_samples, 
         batch_size=args.batch_size,
         self_consistency=self_consistency,
+        max_new_tokens=max_new_tokens,
     )
     title = ""
     if self_consistency > 1:

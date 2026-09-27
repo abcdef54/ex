@@ -25,3 +25,5 @@ data/
 .idea/
 .DS_Store
 *.log
+
+.agents/
